@@ -1,1 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stage &amp; Screen: Broadway &amp; Film Trivia</title>
+    <meta
+      name="description"
+      content="A Broadway marquee and Hollywood game show drag-and-drop trivia challenge celebrating triple-threat actors across film, theatre, and musicals."
+    />
+    <meta property="og:title" content="Stage &amp; Screen: Broadway &amp; Film Trivia" />
+    <meta
+      property="og:description"
+      content="A Broadway marquee and Hollywood game show drag-and-drop trivia challenge celebrating triple-threat actors across film, theatre, and musicals."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- Ambient Sweeping Stage Spotlights -->
+    <div class="ambient-spotlights" aria-hidden="true">
+      <div class="spotlight spotlight--left"></div>
+      <div class="spotlight spotlight--right"></div>
+    </div>
 
+    <!-- Opening Crimson Velvet Curtain & 35mm Movie Countdown Overlay -->
+    <div
+      id="curtain-overlay"
+      class="curtain-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Broadway and Movie Trivia Opening Curtain"
+    >
+      <div class="curtain-panel curtain-panel--left"></div>
+      <div class="curtain-panel curtain-panel--right"></div>
+
+      <div class="curtain-valance">
+        <div id="valance-bulbs" class="bulb-row"></div>
+      </div>
+
+      <div class="spotlight spotlight--intro-left" aria-hidden="true"></div>
+      <div class="spotlight spotlight--intro-right" aria-hidden="true"></div>
+
+      <!-- Phase 1: Opening Title Marquee Card -->
+      <div id="intro-menu-card" class="intro-card">
+        <div class="intro-card__topbar">
+          <span>Broadway · West End · Silver Screen</span>
+          <button id="intro-mute-btn" type="button" class="btn-secondary">
+            Sound &amp; Host Voice On
+          </button>
+        </div>
+
+        <h1 class="intro-title">Stage &amp; Screen Showstoppers</h1>
+
+        <p class="intro-desc">
+          Six acclaimed triple-threat stars have conquered film, theatre plays, and Broadway
+          musicals. Match <strong>3 productions</strong> to each actor from 24 shuffled
+          titles—and watch out for <strong>6 decoy films</strong>!
+        </p>
+
+        <div class="intro-rules-line">
+          <span>+100 Points per Match</span>
+          <span aria-hidden="true">·</span>
+          <span>6 Actors (18 True Credits)</span>
+          <span aria-hidden="true">·</span>
+          <span>Drag or Tap Tiles</span>
+        </div>
+
+        <div class="duration-picker">
+          <div class="duration-picker__label">Select Show Timer</div>
+          <div class="duration-group">
+            <button type="button" class="duration-btn" data-duration="45">
+              Speed Round (0:45)
+            </button>
+            <button
+              type="button"
+              class="duration-btn duration-btn--active"
+              data-duration="180"
+            >
+              Showtime (3:00)
+            </button>
+            <button type="button" class="duration-btn" data-duration="300">
+              Matinee (5:00)
+            </button>
+          </div>
+        </div>
+
+        <div class="intro-cta-wrap">
+          <button id="start-show-btn" type="button" class="btn-gold btn-gold--hero">
+            ▶ Roll Film &amp; Raise Curtain
+          </button>
+        </div>
+      </div>
+
+      <!-- Phase 2: Vintage 35mm SMPTE Movie Countdown -->
+      <div id="countdown-card" class="countdown-card hidden">
+        <div class="countdown-reel-bar">
+          <span>35mm Picture Start</span>
+          <span class="tabular-nums">REEL 01 · SOUND SYNC</span>
+        </div>
+
+        <div class="smpte-circle">
+          <div class="smpte-circle__inner"></div>
+          <div class="smpte-cross-h"></div>
+          <div class="smpte-cross-v"></div>
+          <div class="smpte-radar"></div>
+          <span id="countdown-number" class="smpte-number">3</span>
+        </div>
+
+        <p class="font-display" style="color: #fcd34d; margin: 18px 0 12px; font-weight: 700;">
+          Stand By For Curtain Call...
+        </p>
+
+        <button id="skip-intro-btn" type="button" class="btn-secondary">
+          Skip Countdown
+        </button>
+      </div>
+
+      <!-- Phase 3: Curtain Rising Host Banner -->
+      <div id="rising-banner" class="rising-banner hidden">
+        “Place 3 correct films for each actor!”
+      </div>
+    </div>
+
+    <!-- Top Navigation Bar -->
+    <header class="top-bar">
+      <a href="#actors-grid" class="brand-mark">Stage &amp; Screen</a>
+
+      <nav class="top-nav" aria-label="Stage Navigation">
+        <a id="nav-wordbank-count" href="#word-bank">Word Bank (24)</a>
+        <a href="#actors-grid">Actors Stage</a>
+        <a href="#playbill-notes">Triple-Threat Rules</a>
+      </nav>
+
+      <div>
+        <button id="replay-intro-btn" type="button" class="btn-gold">
+          ↻ Replay Intro &amp; Shuffle
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Game Show Stage -->
+    <main class="stage-container">
+      <!-- Broadway Marquee Scoreboard & Host Bar -->
+      <section class="marquee-hud" aria-label="Game Show Scoreboard and Host">
+        <div id="hud-bulbs" class="bulb-row" aria-hidden="true"></div>
+
+        <div class="marquee-hud__content">
+          <div class="host-strip">
+            <button
+              id="hear-host-btn"
+              type="button"
+              class="btn-host"
+              title="Replay Game Show Host Voice"
+            >
+              <span>🎙 Host</span>
+            </button>
+            <p id="host-quote" class="host-quote">
+              “Place 3 correct films for each actor!”
+            </p>
+          </div>
+
+          <div class="scoreboard-controls">
+            <div class="score-metrics">
+              <div>
+                <div class="metric-label">Score</div>
+                <div id="score-value" class="metric-value metric-value--score tabular-nums">
+                  0
+                </div>
+              </div>
+              <div>
+                <div class="metric-label">Matched</div>
+                <div id="matched-value" class="metric-value tabular-nums">0/18</div>
+              </div>
+              <div>
+                <div class="metric-label">Showstoppers</div>
+                <div
+                  id="showstoppers-value"
+                  class="metric-value metric-value--gold tabular-nums"
+                >
+                  0/6
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div id="timer-label" class="metric-label">Stage Timer</div>
+              <div id="timer-value" class="metric-value tabular-nums">03:00</div>
+            </div>
+
+            <div class="hud-actions">
+              <button id="hud-mute-btn" type="button" class="btn-secondary">
+                Audio On
+              </button>
+              <button id="give-up-btn" type="button" class="btn-danger-outline hidden">
+                Give Up
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- "TRY AGAIN!" Popup Toast -->
+      <div id="try-again-toast" class="try-again-toast hidden" role="alert">
+        <span>⚠ TRY AGAIN!</span>
+      </div>
+
+      <!-- Side-by-Side Arena: Left Word Bank Column + Right 6 Actor Cards -->
+      <div class="game-arena">
+        <aside id="word-bank" class="word-bank" aria-label="Production Word Bank">
+          <div class="word-bank__header">
+            <div class="word-bank__title-row">
+              <h2 class="word-bank__title">Word Bank</h2>
+              <span id="word-bank-count" class="word-bank__count tabular-nums">
+                24 left · 6 decoys
+              </span>
+            </div>
+            <p class="word-bank__hint">
+              Drag or tap a title on the left, then drop it into an actor’s slot on the right.
+            </p>
+          </div>
+
+          <div id="word-bank-grid" class="word-bank__grid"></div>
+        </aside>
+
+        <section
+          id="actors-grid"
+          class="actors-grid"
+          aria-label="Six Triple-Threat Actors"
+        ></section>
+      </div>
+
+      <!-- Editorial Playbill Footer -->
+      <footer id="playbill-notes" class="playbill-footer">
+        <div>
+          <strong style="color: #d6d2e2;">The Well-Rounded Actor Criteria:</strong>
+          Every featured star has headlined across feature films, dramatic stage productions,
+          and musical theatre. Each correct match awards +100 points.
+        </div>
+        <div>Actor portraits courtesy of Wikimedia Commons.</div>
+      </footer>
+    </main>
+
+    <!-- Floating Pointer Drag Ghost -->
+    <div id="drag-ghost" class="drag-ghost hidden" aria-hidden="true">
+      <span>⋮⋮</span>
+      <span id="drag-ghost-title"></span>
+    </div>
+
+    <!-- Final Curtain Victory / Defeat Modal with ENCORE Button -->
+    <div
+      id="end-modal"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Final Scorecard"
+    >
+      <div class="modal-card">
+        <h2 id="end-modal-title" class="intro-title">
+          Standing Ovation! You’re a Showstopper!
+        </h2>
+        <p id="end-modal-desc" class="intro-desc"></p>
+
+        <div class="final-stats-grid">
+          <div>
+            <div class="metric-label">Final Score</div>
+            <div id="final-score-val" class="metric-value metric-value--score tabular-nums">
+              0
+            </div>
+          </div>
+          <div>
+            <div class="metric-label">Films Placed</div>
+            <div id="final-matched-val" class="metric-value tabular-nums">0/18</div>
+          </div>
+          <div>
+            <div class="metric-label">Accuracy</div>
+            <div id="final-accuracy-val" class="metric-value metric-value--gold tabular-nums">
+              100%
+            </div>
+          </div>
+        </div>
+
+        <div class="intro-cta-wrap">
+          <button id="encore-btn" type="button" class="btn-gold btn-gold--hero">
+            ↻ ENCORE
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./script.js" defer></script>
+  </body>
+</html>
