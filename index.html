@@ -3,146 +3,149 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spotlight Stage Quiz — Celebrity Works Gameshow</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <title>Silver Screen Showdown - Celebrity Credits Drag &amp; Drop Quiz</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="spotlight spotlight-left" aria-hidden="true"></div>
-  <div class="spotlight spotlight-right" aria-hidden="true"></div>
+  <!-- Overhead Cinema Spotlight Beams -->
+  <div class="spotlight-rig" aria-hidden="true">
+    <div class="spotlight-beam beam-left"></div>
+    <div class="spotlight-beam beam-center"></div>
+    <div class="spotlight-beam beam-right"></div>
+  </div>
 
   <div class="page-wrapper">
-    <!-- Cinema Marquee Header & Scoreboard -->
-    <div class="marquee-sign">
-      <div class="bulb-row" id="topBulbs" aria-hidden="true"></div>
-      <div class="marquee-inner">
-        <h1>Starlight Screen &amp; Stage Challenge</h1>
-        <div class="host-bar">
-          <p class="host-quote">
-            Host: &ldquo;Place 3 correct film or theater production for each actor!&rdquo;
-          </p>
-          <button type="button" id="speakHostBtn" class="gold-btn">
-            &#127908; Hear Host
-          </button>
-        </div>
+    <header class="marquee-header">
+      <p class="show-kicker">Feature Presentation &middot; Gameshow Edition</p>
+      <h1>Silver Screen Showdown</h1>
+      <p class="instructions">
+        Drag and drop each movie or stage credit into the matching star&rsquo;s spotlight podium.
+        Each podium holds up to <span class="gold-highlight">3 credits</span>.
+      </p>
+    </header>
 
-        <!-- Gameshow Timer & Scoreboard -->
-        <div class="scoreboard">
-          <div class="score-stat">
-            <span class="stat-label">TIME</span>
-            <span id="timerValue" class="stat-value">02:00</span>
-          </div>
-          <span class="stat-sep">&middot;</span>
-          <div class="score-stat">
-            <span class="stat-label">SCORE</span>
-            <span id="scoreValue" class="stat-value">0</span>
-          </div>
-          <span class="stat-sep">&middot;</span>
-          <div class="score-stat">
-            <span class="stat-label">LOCKED</span>
-            <span id="lockedValue" class="stat-value">0 / 18</span>
-          </div>
-        </div>
+    <!-- Gameshow Scoreboard Bar -->
+    <div id="scoreboardBar" class="scoreboard-bar">
+      <div class="score-metrics">
+        <span>Score: <strong id="pointsDisplay">0</strong> pts</span>
+        <span class="sep">&middot;</span>
+        <span>Matched: <strong id="scoreDisplay">0 / 18</strong></span>
+        <span class="sep">&middot;</span>
+        <span>Streak: <strong id="streakDisplay">0x</strong></span>
       </div>
-      <div class="bulb-row" id="bottomBulbs" aria-hidden="true"></div>
+      <div class="stage-controls">
+        <button type="button" id="resetBtn" class="stage-btn gold-btn">Reset Show</button>
+      </div>
     </div>
 
-    <!-- Stage Wrapper with Closing Velvet Curtains -->
-    <div class="stage-viewport">
-      <!-- Floating TRY AGAIN Popup -->
-      <div id="tryAgainPopup" class="try-again-popup" hidden>
-        &#10005; TRY AGAIN!
-      </div>
+    <!-- Main Cinema Stage Frame with 35mm Film Sprocket Trim -->
+    <div id="stageFrame" class="cinema-frame">
+      <div class="film-sprockets" aria-hidden="true"></div>
 
-      <!-- Same Two-Column Drag and Drop Layout -->
-      <div id="dhtmlgoodies_dragDropContainer">
-        <!-- Left Column: Word Bank of 18 Movie/Theater Titles -->
-        <div id="dhtmlgoodies_listOfItems">
-          <div class="column-box">
-            <p>Productions (<span id="remainingCount">18</span> left)</p>
-            <ul id="allItems">
-              <li id="node1" data-groupid="box1" draggable="true">Othello (Theater)</li>
-              <li id="node2" data-groupid="box1" draggable="true">Malcolm X</li>
-              <li id="node3" data-groupid="box1" draggable="true">Fences</li>
+      <div id="dragDropContainer" class="drag-drop-container">
+        <!-- Left Column: Word Bank (18 Movie & Stage Titles) -->
+        <div id="listOfItems" class="word-bank-column">
+          <div class="panel-box bank-panel">
+            <p class="panel-heading">
+              <span>Film Reel Word Bank</span>
+              <span class="badge-count" id="bankCount">18</span>
+            </p>
+            <ul id="allItems" class="drop-list bank-list" data-max="18">
+              <!-- Denzel Washington -->
+              <li id="node1" data-group="box1" draggable="true">Othello (Theater)</li>
+              <li id="node2" data-group="box1" draggable="true">Malcolm X</li>
+              <li id="node3" data-group="box1" draggable="true">Fences</li>
 
-              <li id="node4" data-groupid="box2" draggable="true">Cats</li>
-              <li id="node5" data-groupid="box2" draggable="true">Dark Tower</li>
-              <li id="node6" data-groupid="box2" draggable="true">Mandela</li>
+              <!-- Idris Elba -->
+              <li id="node4" data-group="box2" draggable="true">Cats</li>
+              <li id="node5" data-group="box2" draggable="true">Dark Tower</li>
+              <li id="node6" data-group="box2" draggable="true">Mandela</li>
 
-              <li id="node7" data-groupid="box3" draggable="true">Happy Feet</li>
-              <li id="node8" data-groupid="box3" draggable="true">Les Miserables</li>
-              <li id="node9" data-groupid="box3" draggable="true">The Greatest Showman</li>
+              <!-- Hugh Jackman -->
+              <li id="node7" data-group="box3" draggable="true">Happy Feet</li>
+              <li id="node8" data-group="box3" draggable="true">Les Miserables</li>
+              <li id="node9" data-group="box3" draggable="true">The Greatest Showman</li>
 
-              <li id="node10" data-groupid="box4" draggable="true">Seven Guitars</li>
-              <li id="node11" data-groupid="box4" draggable="true">The Woman King</li>
-              <li id="node12" data-groupid="box4" draggable="true">Ma Rainey’s Black Bottom</li>
+              <!-- Viola Davis -->
+              <li id="node10" data-group="box4" draggable="true">Seven Guitars</li>
+              <li id="node11" data-group="box4" draggable="true">The Woman King</li>
+              <li id="node12" data-group="box4" draggable="true">Ma Rainey’s Black Bottom</li>
 
-              <li id="node13" data-groupid="box5" draggable="true">The Color Purple</li>
-              <li id="node14" data-groupid="box5" draggable="true">Sister Act (The Musical)</li>
-              <li id="node15" data-groupid="box5" draggable="true">Harriet</li>
+              <!-- Cynthia Erivo -->
+              <li id="node13" data-group="box5" draggable="true">The Color Purple</li>
+              <li id="node14" data-group="box5" draggable="true">Sister Act (The Musical)</li>
+              <li id="node15" data-group="box5" draggable="true">Harriet</li>
 
-              <li id="node16" data-groupid="box6" draggable="true">Mama Mia</li>
-              <li id="node17" data-groupid="box6" draggable="true">The Iron Lady</li>
-              <li id="node18" data-groupid="box6" draggable="true">The Taming of the Shrew</li>
+              <!-- Meryl Streep -->
+              <li id="node16" data-group="box6" draggable="true">Mama Mia</li>
+              <li id="node17" data-group="box6" draggable="true">The Iron Lady</li>
+              <li id="node18" data-group="box6" draggable="true">The Taming of the Shrew</li>
             </ul>
           </div>
         </div>
 
-        <!-- Right Column: Six Actor Marquee Boxes (3x2 Grid) -->
-        <div id="dhtmlgoodies_mainContainer">
-          <div class="target-box">
-            <p>Denzel Washington</p>
-            <ul id="box1" data-capacity="3"></ul>
+        <!-- Right Column: 6 Celebrity Podiums -->
+        <div id="mainContainer" class="celebrities-grid">
+          <div class="panel-box celebrity-box">
+            <p class="panel-heading"><span>Denzel Washington</span><span class="slot-tally">0/3</span></p>
+            <ul id="box1" class="drop-list target-list" data-max="3"></ul>
           </div>
 
-          <div class="target-box">
-            <p>Idris Elba</p>
-            <ul id="box2" data-capacity="3"></ul>
+          <div class="panel-box celebrity-box">
+            <p class="panel-heading"><span>Idris Elba</span><span class="slot-tally">0/3</span></p>
+            <ul id="box2" class="drop-list target-list" data-max="3"></ul>
           </div>
 
-          <div class="target-box">
-            <p>Hugh Jackman</p>
-            <ul id="box3" data-capacity="3"></ul>
+          <div class="panel-box celebrity-box">
+            <p class="panel-heading"><span>Hugh Jackman</span><span class="slot-tally">0/3</span></p>
+            <ul id="box3" class="drop-list target-list" data-max="3"></ul>
           </div>
 
-          <div class="target-box">
-            <p>Viola Davis</p>
-            <ul id="box4" data-capacity="3"></ul>
+          <div class="panel-box celebrity-box">
+            <p class="panel-heading"><span>Viola Davis</span><span class="slot-tally">0/3</span></p>
+            <ul id="box4" class="drop-list target-list" data-max="3"></ul>
           </div>
 
-          <div class="target-box">
-            <p>Cynthia Erivo</p>
-            <ul id="box5" data-capacity="3"></ul>
+          <div class="panel-box celebrity-box">
+            <p class="panel-heading"><span>Cynthia Erivo</span><span class="slot-tally">0/3</span></p>
+            <ul id="box5" class="drop-list target-list" data-max="3"></ul>
           </div>
 
-          <div class="target-box">
-            <p>Meryl Streep</p>
-            <ul id="box6" data-capacity="3"></ul>
+          <div class="panel-box celebrity-box">
+            <p class="panel-heading"><span>Meryl Streep</span><span class="slot-tally">0/3</span></p>
+            <ul id="box6" class="drop-list target-list" data-max="3"></ul>
           </div>
         </div>
       </div>
 
-      <!-- Velvet Theater Curtains & Finale Overlay -->
-      <div id="curtainStage" class="curtain-stage">
-        <div class="curtain curtain-left"></div>
-        <div class="curtain curtain-right"></div>
-        <div id="finaleCard" class="finale-card" hidden>
-          <h2 id="finaleTitle">Standing Ovation!</h2>
-          <p id="finaleSubtitle">All 18 film and theater productions matched!</p>
-          <div class="final-score-box">
-            <span class="final-score-label">FINAL SCORE</span>
-            <span id="finalScoreNumber" class="final-score-number">1800</span>
-          </div>
-          <button type="button" id="encoreBtn" class="encore-btn">ENCORE</button>
-        </div>
-      </div>
+      <div class="film-sprockets" aria-hidden="true"></div>
     </div>
 
-    <div id="footer">
-      <span>Correct = Locks Green (+100 pts &amp; Ding) &middot; Wrong = Shakes Red &amp; Returns</span>
-      <button type="button" id="resetBtn">ENCORE / Restart</button>
+    <!-- Exit Theater Curtain Call Screen -->
+    <div id="exitScreen" class="exit-screen" hidden>
+      <p class="show-kicker">Curtain Call &middot; End Credits</p>
+      <h2>Thank You for Visiting the Theater!</h2>
+      <p>Final Score: <strong>1,800 pts</strong> &middot; 18 / 18 Credits Matched</p>
+      <button type="button" id="reenterBtn" class="stage-btn gold-btn">Return to Stage</button>
+    </div>
+  </div>
+
+  <!-- CONGRATULATIONS End-of-Game Popup Modal -->
+  <div id="congratsModal" class="modal-backdrop" hidden role="dialog" aria-modal="true" aria-labelledby="congratsTitle">
+    <div class="modal-card">
+      <div class="film-sprockets" aria-hidden="true"></div>
+      <div class="modal-body">
+        <h2 id="congratsTitle">CONGRATULATIONS</h2>
+        <p class="modal-message">
+          You matched all 18 movie and stage titles with the right celebrities for a grand total of
+          <strong>1,800 pts</strong>!
+        </p>
+        <div class="modal-actions">
+          <button type="button" id="encoreBtn" class="stage-btn gold-btn">ENCORE</button>
+          <button type="button" id="exitTheaterBtn" class="stage-btn secondary-btn">EXIT THEATER</button>
+        </div>
+      </div>
+      <div class="film-sprockets" aria-hidden="true"></div>
     </div>
   </div>
 
