@@ -1,317 +1,218 @@
-const MAX_ITEMS_PER_BOX = 3;
-const ROUND_SECONDS = 120;
-const HOST_LINE = "Place 3 correct film or theater production for each actor!";
+(function () {
+  const MAX_PER_CELEBRITY_BOX = 3;
+  const wordBankList = document.getElementById('allItems');
+  const dropLists = document.querySelectorAll('.drop-list');
+  const bankCountEl = document.getElementById('bankCount');
+  const scoreDisplayEl = document.getElementById('scoreDisplay');
+  const pointsDisplayEl = document.getElementById('pointsDisplay');
+  const streakDisplayEl = document.getElementById('streakDisplay');
+  const resetBtn = document.getElementById('resetBtn');
 
-let draggedItem = null;
-let audioCtx = null;
-let score = 0;
-let lockedCount = 0;
-let timeLeft = ROUND_SECONDS;
-let timerInterval = null;
-let gameEnded = false;
-let tryAgainTimeout = null;
+  const stageFrame = document.getElementById('stageFrame');
+  const scoreboardBar = document.getElementById('scoreboardBar');
+  const exitScreen = document.getElementById('exitScreen');
+  const congratsModal = document.getElementById('congratsModal');
+  const encoreBtn = document.getElementById('encoreBtn');
+  const exitTheaterBtn = document.getElementById('exitTheaterBtn');
+  const reenterBtn = document.getElementById('reenterBtn');
 
-function getAudioCtx() {
-  if (!audioCtx) {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (Ctx) audioCtx = new Ctx();
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-  return audioCtx;
-}
+  let draggedItem = null;
+  let selectedItem = null;
+  let streak = 0;
 
-function playDing() {
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-  const now = ctx.currentTime;
-  [1046.5, 1567.98, 2093].forEach((freq, i) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, now);
-    gain.gain.setValueAtTime(0.001, now);
-    gain.gain.linearRampToValueAtTime(i === 0 ? 0.16 : 0.08, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55 - i * 0.1);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.6);
-  });
-}
-
-function playBuzzer() {
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-  const now = ctx.currentTime;
-  [110, 116.5].forEach((freq) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(freq, now);
-    gain.gain.setValueAtTime(0.001, now);
-    gain.gain.linearRampToValueAtTime(0.09, now + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.42);
-  });
-}
-
-function playApplause() {
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-  const now = ctx.currentTime;
-  const dur = 3.0;
-  const bufSize = Math.floor(ctx.sampleRate * dur);
-  const noise = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-  const data = noise.getChannelData(0);
-  for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
-
-  for (let c = 0; c < 65; c++) {
-    const offset = Math.random() * (dur - 0.2);
-    const t = now + offset;
-    const src = ctx.createBufferSource();
-    src.buffer = noise;
-    const bp = ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.frequency.setValueAtTime(1000 + Math.random() * 1400, t);
-    bp.Q.setValueAtTime(2.2, t);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.001, t);
-    g.gain.linearRampToValueAtTime(0.06, t + 0.005);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
-    src.connect(bp);
-    bp.connect(g);
-    g.connect(ctx.destination);
-    src.start(t, offset, 0.07);
-  }
-}
-
-function playTimesUpAndAww() {
-  const ctx = getAudioCtx();
-  if (ctx) {
-    const now = ctx.currentTime;
-    [0, 0.22].forEach((offset, idx) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(idx === 0 ? 220 : 185, now + offset);
-      g.gain.setValueAtTime(0.001, now + offset);
-      g.gain.linearRampToValueAtTime(0.1, now + offset + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.35);
-      osc.connect(g);
-      g.connect(ctx.destination);
-      osc.start(now + offset);
-      osc.stop(now + offset + 0.38);
-    });
-  }
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance("Time's up! Awww!");
-    u.rate = 0.94;
-    u.pitch = 0.9;
-    window.speechSynthesis.speak(u);
-  }
-}
-
-function speakHostVoice() {
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(HOST_LINE);
-  utterance.rate = 1.04;
-  utterance.pitch = 1.08;
-  window.speechSynthesis.speak(utterance);
-}
-
-function formatTime(sec) {
-  const m = String(Math.floor(sec / 60)).padStart(2, '0');
-  const s = String(sec % 60).padStart(2, '0');
-  return m + ':' + s;
-}
-
-function updateHUD() {
-  const wordBank = document.getElementById('allItems');
-  document.getElementById('remainingCount').textContent = String(
-    wordBank.querySelectorAll('li').length
-  );
-  document.getElementById('scoreValue').textContent = String(score);
-  document.getElementById('lockedValue').textContent = lockedCount + ' / 18';
-  const timerEl = document.getElementById('timerValue');
-  timerEl.textContent = formatTime(timeLeft);
-  timerEl.classList.toggle('low-time', timeLeft <= 20);
-}
-
-function showTryAgainPopup() {
-  const popup = document.getElementById('tryAgainPopup');
-  popup.hidden = false;
-  if (tryAgainTimeout) clearTimeout(tryAgainTimeout);
-  tryAgainTimeout = setTimeout(() => {
-    popup.hidden = true;
-  }, 1100);
-}
-
-function closeCurtains(won) {
-  gameEnded = true;
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-
-  if (won) {
-    playApplause();
-    document.getElementById('finaleTitle').textContent = 'Standing Ovation!';
-    document.getElementById('finaleSubtitle').textContent =
-      'All 18 film and theater productions matched!';
-  } else {
-    playTimesUpAndAww();
-    document.getElementById('finaleTitle').textContent = "Time's Up!";
-    document.getElementById('finaleSubtitle').textContent =
-      'The audience sighs "Awww!" as the curtains close.';
-  }
-
-  document.getElementById('finalScoreNumber').textContent = String(score) + ' PTS';
-  const curtainStage = document.getElementById('curtainStage');
-  curtainStage.classList.add('closed');
-  document.getElementById('finaleCard').hidden = false;
-}
-
-function startTimer() {
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    if (gameEnded) return;
-    timeLeft = Math.max(0, timeLeft - 1);
-    updateHUD();
-    if (timeLeft === 0) {
-      closeCurtains(false);
+  function shuffleWordBank() {
+    const items = Array.from(wordBankList.children);
+    for (let i = items.length - 1; i > 0; i--) {
+      const randomIndex = Math.floor(Math.random() * (i + 1));
+      wordBankList.appendChild(items[randomIndex]);
+      items.splice(randomIndex, 1);
     }
-  }, 1000);
-}
-
-function shuffleWordBank() {
-  const wordBank = document.getElementById('allItems');
-  const items = Array.from(
-    document.querySelectorAll('#dhtmlgoodies_dragDropContainer li')
-  );
-  for (let i = items.length - 1; i > 0; i--) {
-    const r = Math.floor(Math.random() * (i + 1));
-    [items[i], items[r]] = [items[r], items[i]];
   }
-  items.forEach((li) => {
-    li.className = '';
-    li.setAttribute('draggable', 'true');
-    wordBank.appendChild(li);
-  });
-}
 
-function setupDropZone(ulElement) {
-  const wrapperBox = ulElement.parentElement;
-
-  wrapperBox.addEventListener('dragover', (event) => {
-    if (gameEnded || !draggedItem || ulElement.id === 'allItems') return;
-    if (ulElement.querySelectorAll('li').length < MAX_ITEMS_PER_BOX) {
-      event.preventDefault();
-      wrapperBox.classList.add('mouseover');
+  function evaluateItem(item, destinationList) {
+    if (destinationList.id === 'allItems') {
+      item.classList.remove('correctAnswer', 'wrongAnswer');
+      return;
     }
-  });
 
-  wrapperBox.addEventListener('dragleave', (event) => {
-    if (!wrapperBox.contains(event.relatedTarget)) {
-      wrapperBox.classList.remove('mouseover');
-    }
-  });
-
-  wrapperBox.addEventListener('drop', (event) => {
-    event.preventDefault();
-    wrapperBox.classList.remove('mouseover');
-    if (gameEnded || !draggedItem || ulElement.id === 'allItems') return;
-    if (ulElement.querySelectorAll('li').length >= MAX_ITEMS_PER_BOX) return;
-
-    const item = draggedItem;
-    const expectedBoxId = item.getAttribute('data-groupid');
-
-    if (expectedBoxId === ulElement.id) {
-      ulElement.appendChild(item);
-      item.className = 'correctAnswer';
-      item.setAttribute('draggable', 'false');
-      score += 100;
-      lockedCount += 1;
-      playDing();
-      updateHUD();
-      if (lockedCount === 18) {
-        setTimeout(() => closeCurtains(true), 500);
-      }
+    const expectedBox = item.getAttribute('data-group');
+    if (expectedBox === destinationList.id) {
+      item.classList.add('correctAnswer');
+      item.classList.remove('wrongAnswer');
+      streak += 1;
     } else {
-      ulElement.appendChild(item);
-      item.className = 'wrongAnswer';
-      playBuzzer();
-      showTryAgainPopup();
-      setTimeout(() => {
-        item.className = '';
-        document.getElementById('allItems').appendChild(item);
-        updateHUD();
-      }, 550);
+      item.classList.add('wrongAnswer');
+      item.classList.remove('correctAnswer');
+      streak = 0;
     }
-  });
-}
+  }
 
-function resetEncore() {
-  gameEnded = false;
-  score = 0;
-  lockedCount = 0;
-  timeLeft = ROUND_SECONDS;
-  document.getElementById('curtainStage').classList.remove('closed');
-  document.getElementById('finaleCard').hidden = true;
-  document.getElementById('tryAgainPopup').hidden = true;
-  shuffleWordBank();
-  updateHUD();
-  startTimer();
-  speakHostVoice();
-}
+  function updateQuizStatus() {
+    const remainingInBank = wordBankList.querySelectorAll('li').length;
+    bankCountEl.textContent = String(remainingInBank);
 
-function populateMarqueeBulbs() {
-  ['topBulbs', 'bottomBulbs'].forEach((id) => {
-    const row = document.getElementById(id);
-    if (!row) return;
-    row.innerHTML = '';
-    for (let i = 0; i < 26; i++) {
-      const bulb = document.createElement('span');
-      bulb.className = 'bulb';
-      row.appendChild(bulb);
+    document.querySelectorAll('.celebrity-box').forEach((box) => {
+      const count = box.querySelectorAll('li').length;
+      const tally = box.querySelector('.slot-tally');
+      if (tally) tally.textContent = count + '/3';
+    });
+
+    const correctItems = document.querySelectorAll('#mainContainer li.correctAnswer').length;
+    scoreDisplayEl.textContent = correctItems + ' / 18';
+    pointsDisplayEl.textContent = (correctItems * 100).toLocaleString();
+    streakDisplayEl.textContent = streak + 'x';
+
+    if (correctItems === 18 && remainingInBank === 0) {
+      congratsModal.hidden = false;
+    } else {
+      congratsModal.hidden = true;
     }
-  });
-}
+  }
 
-window.addEventListener('DOMContentLoaded', () => {
-  populateMarqueeBulbs();
-  document.querySelectorAll('#dhtmlgoodies_dragDropContainer li').forEach((li) => {
-    li.addEventListener('dragstart', (e) => {
-      if (gameEnded || li.classList.contains('correctAnswer')) {
-        e.preventDefault();
-        return;
+  function placeItemInList(item, targetList) {
+    if (!item || !targetList) return false;
+
+    const isWordBank = targetList.id === 'allItems';
+    const currentCount = targetList.querySelectorAll('li').length;
+    const alreadyInside = item.parentElement === targetList;
+
+    if (!isWordBank && !alreadyInside && currentCount >= MAX_PER_CELEBRITY_BOX) {
+      const boxWrapper = targetList.closest('.panel-box');
+      if (boxWrapper) {
+        boxWrapper.classList.add('box-full');
+        setTimeout(() => boxWrapper.classList.remove('box-full'), 400);
       }
-      draggedItem = li;
-      e.dataTransfer.setData('text/plain', li.id);
+      return false;
+    }
+
+    targetList.appendChild(item);
+    evaluateItem(item, targetList);
+    updateQuizStatus();
+    return true;
+  }
+
+  function initItems() {
+    const allMovieItems = document.querySelectorAll('#allItems li');
+
+    allMovieItems.forEach((item) => {
+      item.addEventListener('dragstart', (event) => {
+        draggedItem = item;
+        item.classList.add('dragging');
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', item.id);
+      });
+
+      item.addEventListener('dragend', () => {
+        item.classList.remove('dragging');
+        draggedItem = null;
+        document.querySelectorAll('.panel-box').forEach((box) => {
+          box.classList.remove('drag-over', 'box-full');
+        });
+      });
+
+      item.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (selectedItem === item) {
+          item.classList.remove('selected-item');
+          selectedItem = null;
+        } else {
+          if (selectedItem) selectedItem.classList.remove('selected-item');
+          selectedItem = item;
+          item.classList.add('selected-item');
+        }
+      });
     });
-    li.addEventListener('dragend', () => {
-      draggedItem = null;
-      document
-        .querySelectorAll('.mouseover')
-        .forEach((b) => b.classList.remove('mouseover'));
+  }
+
+  function initDropZones() {
+    dropLists.forEach((list) => {
+      const panelBox = list.closest('.panel-box');
+
+      list.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        if (!draggedItem) return;
+
+        const isWordBank = list.id === 'allItems';
+        const isFull = !isWordBank &&
+          draggedItem.parentElement !== list &&
+          list.querySelectorAll('li').length >= MAX_PER_CELEBRITY_BOX;
+
+        if (isFull) {
+          event.dataTransfer.dropEffect = 'none';
+          if (panelBox) {
+            panelBox.classList.remove('drag-over');
+            panelBox.classList.add('box-full');
+          }
+        } else {
+          event.dataTransfer.dropEffect = 'move';
+          if (panelBox) {
+            panelBox.classList.remove('box-full');
+            panelBox.classList.add('drag-over');
+          }
+        }
+      });
+
+      list.addEventListener('dragleave', (event) => {
+        if (panelBox && !list.contains(event.relatedTarget)) {
+          panelBox.classList.remove('drag-over', 'box-full');
+        }
+      });
+
+      list.addEventListener('drop', (event) => {
+        event.preventDefault();
+        if (panelBox) panelBox.classList.remove('drag-over', 'box-full');
+
+        const itemId = event.dataTransfer.getData('text/plain');
+        const item = draggedItem || document.getElementById(itemId);
+        if (item) {
+          placeItemInList(item, list);
+        }
+      });
+
+      if (panelBox) {
+        panelBox.addEventListener('click', () => {
+          if (selectedItem) {
+            const moved = placeItemInList(selectedItem, list);
+            if (moved) {
+              selectedItem.classList.remove('selected-item');
+              selectedItem = null;
+            }
+          }
+        });
+      }
     });
-  });
+  }
 
-  document
-    .querySelectorAll('#dhtmlgoodies_mainContainer ul')
-    .forEach((ul) => setupDropZone(ul));
+  function resetQuiz() {
+    const allItems = document.querySelectorAll('.drop-list li');
+    allItems.forEach((item) => {
+      item.classList.remove('correctAnswer', 'wrongAnswer', 'selected-item');
+      wordBankList.appendChild(item);
+    });
+    selectedItem = null;
+    streak = 0;
+    congratsModal.hidden = true;
+    exitScreen.hidden = true;
+    stageFrame.hidden = false;
+    scoreboardBar.hidden = false;
+    shuffleWordBank();
+    updateQuizStatus();
+  }
 
-  document.getElementById('speakHostBtn').addEventListener('click', speakHostVoice);
-  document.getElementById('resetBtn').addEventListener('click', resetEncore);
-  document.getElementById('encoreBtn').addEventListener('click', resetEncore);
+  function exitTheater() {
+    congratsModal.hidden = true;
+    stageFrame.hidden = true;
+    scoreboardBar.hidden = true;
+    exitScreen.hidden = false;
+  }
 
+  resetBtn.addEventListener('click', resetQuiz);
+  encoreBtn.addEventListener('click', resetQuiz);
+  exitTheaterBtn.addEventListener('click', exitTheater);
+  reenterBtn.addEventListener('click', resetQuiz);
+
+  initItems();
+  initDropZones();
   shuffleWordBank();
-  updateHUD();
-  startTimer();
-});
+  updateQuizStatus();
+})();
