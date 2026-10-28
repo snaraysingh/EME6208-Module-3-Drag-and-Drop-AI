@@ -19,7 +19,7 @@
       altWikimediaUrl:
         'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Denzel_Washington_at_the_2025_Cannes_Film_Festival.jpg/330px-Denzel_Washington_at_the_2025_Cannes_Film_Festival.jpg',
       credentials: 'Tony & Two-Time Oscar Winner',
-      works: ['Othello', 'Malcolm X', 'Fences'],
+      works: ['Othello (Theater)', 'Malcolm X', 'Fences'],
     },
     {
       id: 'idris',
@@ -30,7 +30,7 @@
       altWikimediaUrl:
         'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/Idris_Elba_A_House_of_Dynamite-21_%28cropped%29.jpg/330px-Idris_Elba_A_House_of_Dynamite-21_%28cropped%29.jpg',
       credentials: 'Screen, RSC & Musical Star',
-      works: ['Cats', 'Troilus and Cressida', 'Mandela'],
+      works: ['Cats', 'Dark Tower', 'Mandela'],
     },
     {
       id: 'hugh',
@@ -41,7 +41,7 @@
       altWikimediaUrl:
         'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Hugh_Jackman_by_Gage_Skidmore_3.jpg/330px-Hugh_Jackman_by_Gage_Skidmore_3.jpg',
       credentials: 'Two-Time Tony Winner & Film Lead',
-      works: ['The Boy from Oz', 'Les Misérables', 'The Greatest Showman'],
+      works: ['Happy Feet', 'Les Misérables', 'The Greatest Showman'],
     },
     {
       id: 'viola',
@@ -63,7 +63,7 @@
       altWikimediaUrl:
         'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Cynthia_Erivo_-_Wicked-FYC-2_%28cropped%29.jpg/330px-Cynthia_Erivo_-_Wicked-FYC-2_%28cropped%29.jpg',
       credentials: 'Tony, Grammy & Emmy Winner',
-      works: ['The Color Purple', 'Sister Act', 'Harriet'],
+      works: ['The Color Purple', 'Sister Act (The Musical)', 'Harriet'],
     },
     {
       id: 'meryl',
